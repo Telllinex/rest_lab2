@@ -10,7 +10,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import org.springframework.web.servlet.function.RouterFunction
 import org.springframework.web.servlet.function.router
-import ua.kpi.its.lab.rest.dto.ExampleDto
+import ua.kpi.its.lab.rest.handler.SoftwareProductHandler
+import ua.kpi.its.lab.rest.handler.SoftwareModuleHandler
 import java.text.SimpleDateFormat
 
 @Configuration
@@ -23,19 +24,29 @@ class WebConfig : WebMvcConfigurer {
             .dateFormat(SimpleDateFormat("yyyy-MM-dd"))
             .modulesToInstall(KotlinModule.Builder().build())
 
-        converters
-            .add(MappingJackson2HttpMessageConverter(builder.build()))
+        converters.add(MappingJackson2HttpMessageConverter(builder.build()))
     }
 
     @Bean
-    fun functionalRoutes(): RouterFunction<*> = router {
+    fun functionalRoutes(
+        productHandler: SoftwareProductHandler,
+        moduleHandler: SoftwareModuleHandler
+    ): RouterFunction<*> = router {
         "/fn".nest {
-            "/example".nest {
-                GET("") {
-                    ok().body(ExampleDto("example"))
-                }
+            "/products".nest {
+                POST("", productHandler::createProductHandler)
+                GET("/{id}", productHandler::getProductByIdHandler)
+                PUT("/{id}", productHandler::updateProductHandler)
+                DELETE("/{id}", productHandler::deleteProductHandler)
+                GET("", productHandler::getAllProductsHandler)
             }
-
+            "/modules".nest {
+                POST("", moduleHandler::createModuleHandler)
+                GET("/{id}", moduleHandler::getModuleByIdHandler)
+                PUT("/{id}", moduleHandler::updateModuleHandler)
+                DELETE("/{id}", moduleHandler::deleteModuleHandler)
+                GET("", moduleHandler::getAllModulesHandler)
+            }
         }
     }
 }
